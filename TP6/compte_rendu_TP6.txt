@@ -1,0 +1,139 @@
+Compte-rendu TP6 (controle de TP)
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+------------------------------------------------------------------
+
+Exercice 1
+==========
+
+Inserez le source du script saisie.sh
+#! /bin/bash
+# saisie.sh
+
+n=-1
+while [ "$n" -lt 0 ] || [ "$n" -gt 10 ]
+do
+  echo "Saisissez une valeur entre 0 et 10"
+  read n
+done
+
+if [ "$n" -lt 7 ]
+then
+  echo "$n"
+else
+  echo "Pas de valeur"
+fi
+
+
+Expliquez votre solution
+Dans le cas ou la valeur entrée par l'utilisateur est plus petite que 7 (-lt) on affiche cette valeur avec un echo.
+Dans le cas contraire (else) on affiche "Pas de valeur" avec echo.
+
+
+Exercice 2
+==========
+
+Inserez le source des scripts test_saisie.sh et saisie_val.sh
+#! /bin/bash
+# saisie_val.sh
+
+n=-1
+while [ $n -lt 0 ]
+do
+  echo "Saisissez une valeur positive"
+  read n
+done
+
+exit $n
+
+
+#! /bin/bash
+# test_saisie.sh
+
+./saisie_val.sh
+val1=$?
+val2=42
+while [ $val2 -gt $val1 ] ; do
+    ./saisie_val.sh
+    val2=$?
+done
+	    
+
+
+Expliquez votre solution
+Les valeurs vont forcément de 0 a 10 => on peut initialiser la deuxieme valeur a un nb plus grand
+On utilise exit pour transmettre les valeurs du fils au pere qu'on recupere avec $?
+On peut utiliser exit car exit peut rendre des valeurs entre 0 et 255 (nous on veut de 0 a 10)
+
+Exercice 3
+==========
+
+Inserez le source des scripts lecture1.sh et lecture2.sh
+#! /bin/bash
+# lecture1.sh
+
+fic="$1"
+export fic
+
+for i in 1 2
+do
+  read a
+  echo "a1 : $a"
+  ./lecture2.sh
+done
+
+
+#! /bin/bash
+# lecture2.sh
+
+for i in 1 2
+do
+  read a
+  echo "a2 : $a"
+done < $fic
+read b < $fic
+echo "b  : $b"
+
+
+Justifiez votre solution
+Dans le deuxieme script, on effectue un read non pas sur la sortie standard mais à partir d'un fichier.
+On le fait grace aux redirections. fic existe bien dans le 2eme script car il est exporté par son père (il appartiendra a l'environnement du fils).
+
+Exercice 4
+==========
+
+Repondez aux questions de votre sujet, inserez le source des scripts demandes
+1. SIGALRM est le numero 14
+2.
+#! /bin/bash
+# alarm.sh
+
+if [[ $# -ne 3 ]] ; then
+    echo "Usage : $0 pid nb delay"
+    exit 1
+fi
+
+i=0
+while [ "$i" -lt $2 ] ;	do
+    kill -SIGALRM $1
+    sleep "$3"
+    i=$(($i+1))
+done
+
+
+3.
+#! /bin/bash
+# script_alarm.sh
+
+trap "echo Je viens de recevoir SIGALRM" SIGALRM
+
+./alarm.sh $$ 3 1 &
+
+i=0
+while [ "$i" -ne 42 ] ; do
+    echo -n
+done
+    

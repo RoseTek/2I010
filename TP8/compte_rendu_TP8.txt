@@ -1,0 +1,268 @@
+Compte-rendu TP8
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+
+NOM :
+Prenom :
+Numero carte d'etudiant :
+------------------------------------------------------------------
+
+
+Synchronisations multiples
+==========================
+
+Question 1
+----------
+script saisie.sh
+#! /bin/bash
+
+if [[ $# -ne 1 || -d $1 ]] ; then
+    echo "Usage : $0 non_directory_str"
+    exit 1
+fi
+
+echo "Saisie des notes :"
+echo -n > $1
+while read note ; do
+    echo $note >> $1
+    if [[ $note -lt 0 ]] ; then
+       exit 0
+    fi
+done
+		   
+
+Question 2
+----------
+script somme.sh
+#! /bin/bash
+
+if [[ $# -ne 1 || ! -f $1 ]] ; then
+    echo "Usage : $0 file"
+    exit 1
+fi
+
+cpt=0
+sum=0
+
+while read note ; do
+    if [[ $note -lt 0 ]] ; then
+        break
+    fi
+    sum=$((sum+note))
+    cpt=$((cpt+1))
+done < $1
+
+echo "$cpt $sum" > $1
+
+
+Question 3
+----------
+script moy.sh
+#! /bin/bash
+
+if [[ $# -ne 1 || ! -f $1 ]] ; then
+    echo "Usage : $0 file"
+    exit 1
+fi
+
+read nb sum < $1
+moy=$((sum/nb))
+if [[ $moy -gt 10 ]] ; then
+    echo "recu $moy"
+else
+    echo "recale $moy"
+fi
+	
+
+Question 4
+----------
+Usage : ./somme.sh file
+Usage : ./moy.sh file
+Saisie des notes :
+[1]   Fini                    ./saisie.sh fic < fic_notes
+[2]-  Termine 1               ./somme.sh fic
+[3]+  Termine 1               ./moy.sh fic
+
+Explications :
+somme et moyenne sur fic n'ont pas trouvé le fichier fic qui était sensé etre généré par saisie a partir de fic_notes
+
+Question 5
+----------
+Nouvelle version des scripts
+/!\ cette solution oblige a effectuer saisie PUIS somme PUIS moy
+
+#! /bin/bash
+# saisie
+
+if [[ $# -ne 1 || -d $1 ]] ; then
+    echo "Usage : $0 non_directory_str"
+    exit 1
+fi
+echo "Saisie des notes :"
+echo -n > $1
+while read note ; do
+    echo $note >> $1
+    if [[ $note -lt 0 ]] ; then
+        echo > "$1.saisie.sync"
+        exit 0
+    fi
+done
+
+
+#! /bin/bash
+#somme
+
+if [[ $# -ne 1 ]] ; then
+    echo "Usage : $0 file"
+    exit 1
+fi
+while [ ! -f "$1.saisie.sync" ] ; do
+    sleep 1
+done
+rm -f "$1.saisie.sync"
+if [[ ! -f $1 ]] ; then
+    echo "Error : $1 not file"
+    exit 1
+fi
+cpt=0
+sum=0
+while read note ; do
+    if [[ $note -lt 0 ]] ; then
+        echo "$cpt $sum" > $1
+        echo > "$1.somme.sync"
+        exit 0
+    fi
+    sum=$((sum+note))
+    cpt=$((cpt+1))
+done < $1
+
+
+#! /bin/bash
+#moy
+
+if [[ $# -ne 1 ]] ; then
+    echo "Usage : $0 file"
+    exit 1
+fi
+while [ ! -f "$1.somme.sync" ]; do
+    sleep 1
+done
+rm -f "$1.somme.sync"
+if [[ ! -f $1 ]] ; then
+    echo "Error : $1 not file"
+    exit 1
+fi
+read nb sum < $1
+moy=$((sum/nb))
+if [[ $moy -gt 10 ]] ; then
+    echo "recu $moy"
+else
+    echo "recale $moy"
+fi
+			    
+
+Question 6
+----------
+Nouvelle modification si necessaire
+
+Synchronisations croisees et alternance d'executions
+====================================================
+
+Question 1
+----------
+script ecrivain.sh
+#! /bin/bash
+# ecrivain => producteur
+
+if [[ $# -le 1 || -d $1 ]] ; then
+    echo "Usage : $0 non_directory_str <params ...>"
+    exit 1
+fi
+
+file=$1
+shift
+echo -n > $file
+for val in "$@" ; do
+    sleep 1
+    echo $val >> $file
+done
+	
+
+Question 2
+----------
+script lecteur.sh
+#! /bin/bash
+# lecteur => consommateur
+
+if [[ $# -ne 1 || -d $1 ]] ; then
+    echo "Usage : $0 file"
+    exit 1
+fi
+
+file=$1
+while read line	; do
+    echo "mot lu $line"
+done < $file
+
+Question 3
+----------
+Constatations
+L'ecrivain etant trop lent, le lecteur se termine avant que tout le fichier soit rempli
+
+
+Question 4
+----------
+Nouvelle version des scripts lecteur.sh et ecrivain.sh 
+#! /bin/bash
+# lecteur => consommateur
+
+if [[ $# -ne 1 || -d $1 ]] ; then
+    echo "Usage : $0 file"
+    exit 1
+fi
+
+file=$1
+touch $file
+while [ 1 -eq 1 ] ; do
+    if [ ! -f $file.sync ] ; then
+        sleep 1
+    else
+        read line
+        if [ "$line" = "fin" ] ; then
+            echo "fin de lecture"
+            rm -f $file
+            rm -f $file.sync
+            exit 0
+        fi
+        echo "mot lu $line"
+        rm -f $file.sync
+    fi
+done < $file
+exit 1
+
+
+-------------------------------------
+
+#! /bin/bash
+# ecrivain => producteur                                               
+
+if [[ $# -le 1 || -d $1 ]] ; then
+    echo "Usage : $0 non_directory_str <params ...>"
+    exit 1
+fi
+
+file=$1
+shift
+echo -n > $file
+for val in "$@" ; do
+    while [ -f $file.sync ] ; do
+        sleep 1
+    done
+    echo $val >> $file
+    touch $file.sync
+done
+echo fin >> $file
+touch $file.sync

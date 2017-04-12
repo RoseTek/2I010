@@ -1,0 +1,398 @@
+Compte-rendu TP4
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+
+NOM :
+Prenom :
+Numero carte d'etudiant :
+------------------------------------------------------------------
+note : Ctrl+C = SIGINT
+
+Terminaison d'un processus
+==========================
+
+Question 1
+----------
+Comment arreter le processus ?
+kill Numero_processus (envoie SIGTERM au processus)
+
+Question 2
+----------
+Constatations ?
+Instruction non permise et fin de la boucle inf
+
+Question 3
+----------
+Inserez le code source du script boucleinfinie3.sh
+#! /bin/bash
+# boucleinfinie3.sh
+
+echo Je suis le processus $$
+trap "echo $$ a recu un Ctrl+c ; exit 0" SIGINT
+
+i=0
+while [ true ]
+do
+  echo $i
+  i=`expr $i + 1`
+  sleep 1
+done
+   
+
+Inserez les executions
+./boucleinfinie3.sh
+Je suis le processus 8684
+0
+1
+^C8684 a recu un Ctrl+c
+
+Question 4
+----------
+Inserez le code source du script boucleinfinie4.sh
+#! /bin/bash
+# boucleinfinie4.sh
+
+echo Je suis le processus $$
+trap "echo $$ a recu un SIGINT ; exit 0" SIGINT
+trap "echo $$ a recu un SIGQUIT ; exit 0" SIGQUIT
+trap "echo $$ a recu un SIGTERM ; exit 0" SIGTERM
+
+i=0
+while [ true ]
+do
+   echo $i
+   i=`expr $i + 1`
+   sleep 1
+done
+   
+Inserez les executions
+./boucleinfinie4.sh
+Je suis le processus 8913
+0
+1
+2
+3
+8913 a recu un SIGQUIT
+(kill -3 8913 dans un autre terminal)
+
+Idem pour les autres :
+SIGINT : kill -2
+SIGTERM : kill -15
+
+Signaux
+=======
+
+Question 1
+----------
+Inserez le code source du script saisie.sh
+#! /bin/bash
+
+#en bash -a = and
+#1-31
+while read input
+do
+    if [ $input -ge 1 -a $input -le 31 ]; then
+        var1=$input
+        break
+    else
+        echo "Entrez un nombre entre 1 et 31"
+    fi
+done <&0
+
+#1-12
+while read input
+do
+    if [ $input -ge 1 -a $input -le 12 ]; then
+       var2=$input
+       break
+    else
+       echo "Entrez un nombre entre 1 et 12"
+    fi
+done <&0
+
+#1960-1980
+while read input
+do
+    if [ $input -ge 1960 -a $input -le 1980 ]; then
+       var3=$input
+	break
+    else
+        echo "Entrez un nombre entre 1960 et 1980"
+    fi
+done <&0
+
+echo "User input : $var1-$var2-$var3"
+
+Inserez les executions
+./saisie.sh
+2
+45
+Entrez un nombre entre 1 et 12
+3
+1970
+User input : 2-3-1970
+
+Question 2
+----------
+Inserez le code source du script saisie1.sh
+#! /bin/bash
+
+#en bash -a = and
+#1-31
+while read input
+do
+    if [ $input -ge 1 -a $input -le 31 ]; then
+        var1=$input
+        break
+    else
+        echo "Entrez un nombre entre 1 et 31"
+    fi
+done <&0
+
+trap "echo SIGINT intercepté" SIGINT
+
+#1-12
+while read input
+do
+    if [ $input -ge 1 -a $input -le 12 ]; then
+       var2=$input
+       break
+    else
+       echo "Entrez un nombre entre 1 et 12"
+    fi
+done <&0
+
+trap - SIGINT
+
+#1960-1980
+while read input
+do
+    if [ $input -ge 1960 -a $input -le 1980 ]; then
+       var3=$input
+	break
+    else
+        echo "Entrez un nombre entre 1960 et 1980"
+    fi
+done <&0
+
+echo "User input : $var1-$var2-$var3"
+
+
+Inserez les executions
+./saisie.sh
+2
+^CSIGINT intercepté
+^CSIGINT intercepté
+^CSIGINT intercepté
+^CSIGINT intercepté
+5
+^C
+
+./saisie.sh
+^C
+
+Valeur de retour d'un processus
+===============================
+
+Question 1
+----------
+Inserez le code source du script petit_fils.sh
+#! /bin/bash
+
+if [ $# -ne 1 ]; then
+   exit	1
+fi
+
+echo "Je suis le processus $1"
+
+Inserez les executions
+./petit_fils.sh 1 2
+./petit_fils.sh 1
+Je suis le processus 1
+./petit_fils.sh 
+
+
+Question 2
+----------
+Inserez le code source du script fils.sh
+#! /bin/bash
+
+if [ $# -ne 1 ]; then
+   exit 1
+fi
+
+var=$(./alea.sh)
+
+echo "Je suis le fils $1 et je dois creer $var petits fils"
+
+for i in $(seq 1 "$var")
+do
+    ./petit_fils.sh $1.$i
+done
+    
+
+Inserez les executions
+./fils.sh 42
+Je suis le processus 42 et je dois creer 4 petits fils
+Je suis le processus 42.1
+Je suis le processus 42.2
+Je suis le processus 42.3
+Je suis le processus 42.4
+
+./fils.sh 42
+Je suis le processus 42 et je dois creer 9 petits fils
+Je suis le processus 42.1
+Je suis le processus 42.2
+Je suis le processus 42.3
+Je suis le processus 42.4
+Je suis le processus 42.5
+Je suis le processus 42.6
+Je suis le processus 42.7
+Je suis le processus 42.8
+Je suis le processus 42.9
+
+
+Question 3
+----------
+Inserez le code source du script pere.sh
+#! /bin/bash
+
+if [ $# -ne 1 ]; then
+   exit 1
+fi
+
+for i in $(seq 1 "$1")
+do
+    ./fils.sh $i
+done
+
+Inserez les executions
+./pere.sh 3
+Je suis le fils 1 et je dois creer 1 petits fils
+Je suis le processus 1.1
+Je suis le fils 2 et je dois creer 3 petits fils
+Je suis le processus 2.1
+Je suis le processus 2.2
+Je suis le processus 2.3
+Je suis le fils 3 et je dois creer 8 petits fils
+Je suis le processus 3.1
+Je suis le processus 3.2
+Je suis le processus 3.3
+Je suis le processus 3.4
+Je suis le processus 3.5
+Je suis le processus 3.6
+Je suis le processus 3.7
+Je suis le processus 3.8
+
+
+
+Question 4
+----------
+Inserez le code source des nouvelles versions des scripts
+#! /bin/bash
+#pere
+
+export total=1
+
+if [ $# -ne 1 ]; then
+   exit 1
+fi
+
+for i in $(seq 1 "$1")
+do
+    source ./fils.sh $i
+done
+
+echo "$total processus ont ete crees"
+
+___________________
+
+#! /bin/bash
+#fils
+
+total=$((total+1))
+
+if [ $# -ne 1 ]; then
+   exit 1
+fi
+
+var=$(./alea.sh)
+
+echo "Je suis le fils $1 et je dois creer $var petits fils"
+
+for i in $(seq 1 "$var")
+do
+    source ./petit_fils.sh $1.$i
+done    
+___________________
+
+#! /bin/bash
+#petit_fils
+
+total=$((total+1))
+
+if [ $# -ne 1 ]; then
+   exit 1
+fi
+
+echo "Je suis le processus $1"
+
+
+Inserez les executions
+./pere.sh 3
+Je suis le fils 1 et je dois creer 2 petits fils
+Je suis le processus 1.1
+Je suis le processus 1.2
+Je suis le fils 2 et je dois creer 4 petits fils
+Je suis le processus 2.1
+Je suis le processus 2.2
+Je suis le processus 2.3
+Je suis le processus 2.4
+Je suis le fils 3 et je dois creer 2 petits fils
+Je suis le processus 3.1
+Je suis le processus 3.2
+12 processus ont ete crees
+
+
+Valeur retournee et/ou valeur affichee ?
+========================================
+
+Question 1
+----------
+Inserez le code source du script test.sh et de la nouvelle version de repertoire.sh
+#! /bin/bash
+# repertoire.sh
+
+count=0
+
+for rep in "$@"; do
+    if [ ! -d "$rep" ] ; then
+            count=$((count+1))
+    fi
+done
+
+exit $count;
+
+
+
+#! /bin/bash
+#test.sh
+
+./repertoire.sh $@
+
+result=$?
+
+if [ $result -eq 0 ]; then
+    echo "Tous les parametres sont des repertoires"
+elif [ $result -eq 1 ]; then
+    echo "1 parametre ne correspond pas a un repertoire"
+else
+    echo "$result parametres ne correspondent pas a des repertoires"
+fi
+
+
+
+

@@ -1,0 +1,318 @@
+Compte-rendu TP3
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+
+NOM :
+Prenom :
+Numero carte d'etudiant :
+------------------------------------------------------------------
+
+
+Passage de parametres et exportation de variables
+=================================================
+
+Question 1
+----------
+Inserez le code source du script pere_para.sh
+#! /bin/bash
+
+for i in $(seq $1); do
+    ./fils_para.sh $i $1
+done
+
+Inserez le code source du script fils_para.sh
+#! /bin/bash
+
+echo "Je suis le fils $1 sur $2"
+
+Inserez les executions
+./pere_para.sh 5
+Je suis le fils 1 sur 5
+Je suis le fils 2 sur 5
+Je suis le fils 3 sur 5
+Je suis le fils 4 sur 5
+Je suis le fils 5 sur 5
+
+./pere_para.sh 2
+Je suis le fils 1 sur 2
+Je suis le fils 2 sur 2
+
+
+Question 2----------
+Inserez le code source du script pere.sh
+#! /bin/bash
+
+export TOTAL=$1
+export i
+for i in $(seq $1); do
+    ./fils_para.sh
+done
+    
+
+Inserez le code source du script fils.sh
+#! /bin/bash
+
+echo "Je suis le fils $i sur $TOTAL"
+
+Inserez les executions
+./pere_para.sh 4
+Je suis le fils 1 sur 4
+Je suis le fils 2 sur 4
+Je suis le fils 3 sur 4
+Je suis le fils 4 sur 4
+
+
+Hierarchie de processus shell
+=============================
+
+Question 1
+----------
+A = 30			echo $A
+PID = 4417  		echo ${$}
+
+Question 2
+----------
+A =			echo $A
+PID = 4878   	    	echo ${$}
+PPID = 4417	    	echo $PPID
+Le PID du fils est différent de celui du pere
+Le PID du pere est le PID du premier Shell depuis on l'a lancé
+
+Question 3
+----------
+A = 30
+PID = 4417
+On est bien retourné dans le shell de base avec les variables qu'on a défini (A)
+
+Question 4
+----------
+Execution :
+export A
+bash
+echo $A
+
+Question 5
+----------
+Execution :
+A=42
+exit
+echo $A
+Explications :
+Le A est egal a 30
+Avec export, le nouveau bash lancé a une copie de A.
+On a modifié une copie de A dans le deuxieme bash.
+Donc sa valeur dans le pere n a pas été modifiée
+
+
+Question 6
+----------
+Constatations :
+Le A n'est pas defini dans le xterm qu'on a lancé
+
+Question 7
+----------
+Constatations :
+Avec le export, A existe bien dans le processus de xterm lancé
+
+Explications :
+export VAR permet a tous les processus fils d'avoir une copie de VAR à leur disposition dans leur environnement
+
+Question 8
+----------
+Constatations :
+La valeur modifiée n'est pas conservee
+
+Explications :
+Dans terminal2 on a modifié une copie de la variable
+
+Question 9
+----------
+Constatations :
+La valeur de A modifiée dans le processus pere est aussi modifiée dans le fils
+
+Explications :
+Le fils a une copie de la variable du père.
+Si la valeur change dans le processus pere, elle change donc dans le fils
+
+Question 10
+----------
+Constatations :
+La variable A existe toujours dans le fils du fils.
+
+Explicatios :
+Export d'une var est héréditaire
+
+Question 11
+----------
+en ouvrant un terminal depuis le menu sur le bureau :
+Constatations :
+A n'est pas defini
+
+Deductions :
+normal car A n'a pas ete export a un plus haut niveau
+
+Redirection des entrees-sorties
+===============================
+
+Question 1
+----------
+Inserez le code source du script ensemble_calculs.sh
+#! /bin/bash
+
+for i in "$@"
+do
+    ./calcul.sh $i
+done
+    
+Inserez les ex残utions
+./ensemble_calculs.sh "1 + 2" "5 - 7" "8 - 1" "8 - 8"
+3
+-2
+7
+0
+
+
+Question 2
+----------
+Inserez le code source du script ensemble_calculs1.sh
+
+#! /bin/bash
+#UNE OUVERTURE
+
+file=$1
+shift
+
+if [ -d $file ]; then
+    echo "Repertoire $1 existant"
+    exit 1
+fi
+
+for i in "$@"
+do
+    ./calcul.sh $i
+done > file
+    
+Inserez les executions
+./ensemble_calculs.sh file "1 + 2" "5 - 7" "8 - 1" "8 - 8"
+cat file
+3
+-2
+7
+0
+
+
+Inserez le code source du script ensemble_calculs2.sh
+
+#! /bin/bash
+#plusieurs OUVERTURES
+
+file=$1
+shift
+
+if [ -d $file ]; then
+    echo "Repertoire $1 existant"
+    exit 1
+fi
+
+echo -n "" > file
+for i in "$@"
+do
+    ./calcul.sh $i >> file
+done
+
+Inserez les executions
+./ensemble_calculs.sh file "1 + 2" "5 - 7" "8 - 1" "8 - 8"
+cat file
+3
+-2
+7
+0
+
+
+
+Question 3
+----------
+Inserez le code des nouveaux scripts
+#! /bin/bash
+#plusieurs OUVERTURES
+
+fic_pos=$1
+fic_neg=$2
+shift
+shift
+
+if [[ -d $fic_pos || -d $fic_neg ]]; then
+    echo "Repertoire porte le nom $fic_pos ou $fic_neg"
+    exit 1
+fi
+
+rm $fic_neg
+rm $fic_pos
+
+for i in "$@"
+do
+    res=$(./calcul.sh $i)
+    case $res in
+        -*)
+            echo $res >> $fic_neg;;
+        *)
+            echo $res >> $fic_pos;;
+    esac
+done
+						    
+-------------------------Avec calcul.sh
+#! /bin/bash
+
+export fic_pos=$1
+export fic_neg=$2
+shift
+shift
+
+if [[ -d $fic_pos || -d $fic_neg ]]; then
+    echo "Repertoire porte le nom $fic_pos ou $fic_neg"
+    exit 1
+fi
+
+rm $fic_neg
+rm $fic_pos
+
+for i in "$@"
+do
+    ./calcul.sh $i
+done
+
+
+#! /bin/bash
+# calcul.sh
+
+if [ $# -ne 3 ]
+then
+  echo Il faut trois parametres
+  exit 1
+fi
+
+if [ "$2" != "+" ] && [ "$2" != "-" ]
+then
+  echo "l'operateur doit etre + ou -"
+  exit 2
+fi
+
+res=`expr $1 $2 $3`
+case $res in
+  -*)
+      echo $res >> $fic_neg;;
+  *)
+      echo $res >> $fic_pos;;
+esac
+
+Inserez les executions
+./ensemble_calculs.sh pos neg "1 + 2" "5 - 7" "8 - 1" "8 - 8"
+cat pos
+3
+7
+0
+cat neg
+-2

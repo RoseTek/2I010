@@ -1,0 +1,151 @@
+Compte-rendu TP2
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+
+NOM :
+Prenom :
+Numero carte d'etudiant :
+------------------------------------------------------------------
+
+
+Difference entre guillemets et apostrophes
+==========================================
+
+Question 1
+----------
+Execution et explications :
+./guillemet.sh oulala "test test"
+var avec apostrophes = $1 $2
+var avec guillemets = oulala test test
+var avec guillemets affichee avec apostrophes = $var2
+var avec guillemets et apostrophes = oulala 'test test'
+ls avec apostrophes = `ls`
+ls avec guillemets = BRUNO_compte_rendu_TP2.txt date guillemets.sh TP2.pdf
+
+
+Utilisation de la variable PATH
+===============================
+
+Question 1
+----------
+Constatations :
+la commande date n'execute pas notre script nommé date.
+
+Question 2
+----------
+Constatations et explications :
+./date permet d'executer notre script.
+Explication : en l'absence d'un chemin, le shell parcours les dossiers de la variable d'environnement PATH pour trouver l'executable correct.
+
+
+Premier script
+==============
+
+Question 1
+----------
+Inserez le code du script contenuRepertoires.sh
+#! /bin/bash
+
+if [ "$#" -eq 0 ]; then
+    pwd
+    exit 0
+fi
+
+while (( "$#" )); do
+    if [[ -d $1 ]]; then
+	echo $1 "est un repertoire"
+    elif [[ -f $1 ]]; then
+	echo $1 "est un fichier"
+    else
+	echo $1 "n est ni un repertoire ni un fichier"
+    fi
+    shift
+done
+
+Question 2
+----------
+Inserez le code du script contenuRepertoires1.sh
+#! /bin/bash
+
+if [ "$#" -eq 0 ]; then
+    pwd
+    exit 0
+fi
+
+while (( "$#" )); do
+    if [[ -d $1 ]]; then
+	echo $1 "est un repertoire : `ls $1 | wc -l` element(s)"
+    elif [[ -f $1 ]]; then
+	echo $1 "est un fichier"
+    else
+	echo $1 "n est ni un repertoire ni un fichier"
+    fi
+    shift
+done
+
+
+Pour aller plus loin
+=======================================
+
+Question 1
+----------
+Inserez le code du script creationArboFichier.sh
+#! /bin/bash
+
+if [[ "$#" -ne 1 || ! -f $1 ]]; then
+    echo "Usage : $0 file"
+    exit 0
+fi
+
+while read -r line
+do
+    value="$line"
+
+    ls $value &> /dev/null
+    if [[ "$?" -ne 0 ]]; then
+	mkdir $value
+	echo "Le repertoire $value a ete cree"
+    else
+	echo "Un element de nom $value existe deja"
+    fi
+done < $1
+
+Question 2
+----------
+Inserez le code du script creationArboFichier2.sh
+#! /bin/bash
+
+if [[ "$#" -ne 1 || ! -f $1 ]]; then
+    echo "Usage : $0 file"
+    exit 0
+fi
+
+while read -r line
+do
+    set -- $line
+    if [[ "$1" == "f" ]]; then
+
+	ls $2 &> /dev/null
+	if [[ "$?" -ne 0 ]]; then
+    	    touch $2
+    	    echo "Le fichier $2 a ete cree"
+	else
+    	    echo "Un element de nom $2 existe deja"
+	fi
+
+    elif [[ "$1" == "d" ]]; then
+	ls $2 &> /dev/null
+	if [[ "$?" -ne 0 ]]; then
+    	    mkdir $2
+    	    echo "Le repertoire $2 a ete cree"
+	else
+    	    echo "Un element de nom $2 existe deja"
+	fi
+
+    else
+	echo $1 ": type inconnu"
+    fi
+done < $1

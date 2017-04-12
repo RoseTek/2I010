@@ -1,0 +1,309 @@
+Compte-rendu TP9
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+
+NOM :
+Prenom :
+Numero carte d'etudiant :
+------------------------------------------------------------------
+
+* Exercice 1 *
+Question 1
+----------
+affiche_para.c
+===============
+#include <stdio.h>
+
+int main(int ac, char **av)
+{
+  int i;
+
+  printf("Executable : %s passé avec %d parametre(s) \n", av[0], ac-1);
+    for (i=1 ; i<ac ; i++)
+        printf("%s\n", av[i]);
+  return 0;
+}
+
+
+sortie de ./affiche_para
+========================
+./affiche_para 1 2 3
+Executable : ./affiche_para passé avec 3 parametre(s)
+1
+2
+3
+
+
+Question 2
+----------
+add.c
+=====
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+int check_number(char *str)
+{
+  int i;
+
+  i = 0;
+  if (str[i] != '\0' && str[i] == '-')
+    i++;
+  while (str[i] != '\0')
+    {
+      if (str[i] < '0' || str[i] > '9')
+	return 1;
+      i++;
+    }
+  return 0;
+}
+
+//atoi ne gere pas --2 = +2
+int main(int ac, char **av)
+{
+  int a,b;
+  
+  if (ac != 3 || check_number(av[1]) || check_number(av[2]))
+    {
+      printf("Usage : %s Number Number\n", av[0]);
+      return 1;
+    }
+  a = atoi(av[1]);
+  b = atoi(av[2]);
+  /* printf("%d + %d = %d\n", a, b, a+b); */
+  printf("%d\n", a+b);
+  return 0;
+}
+
+
+
+sortie de ./add
+===============
+./add 
+Usage : ./add Number Number
+./add 5 6
+11
+
+Question 3
+----------
+affiche_env.c
+=============
+#include <stdio.h>                                                             
+#include <stdlib.h>                                                            
+                                                                               
+int main()
+{
+  printf("PATH = %s\n", getenv("PATH"));
+  return 0;
+}
+
+
+sortie de ./affiche_env
+=======================
+./a.out 
+PATH = /Infos/lmd/2016/licence/ue/2I004-2016oct/remcpt/:/usr/local/pig-0.15.0/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin:/Infos/lmd/2016/licence/ue/2I001-2016oct/bin:/Infos/lmd/2016/licence/ue/2I001-2016oct/remcpt:/Infos/lmd/2016/licence/ue/2I010-2017fev/bin
+
+
+Question 4
+----------
+modif_env.c
+===========
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+  printf("%s\n", getenv("TOTO"));
+  setenv("TOTO","42",1);
+  printf("%s\n", getenv("TOTO"));
+  return 0;
+}
+
+
+sortie de ./modif_env
+=====================
+./modif_env
+(null)
+42
+
+* Exercice 2 *
+Question 1
+----------
+source de votre programme
+==========
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+//un appel avec system cree un processus                                       
+//les processus crees héritent de l'environnement qu'on a modifié              
+int main()
+{
+  printf("%d: %s\n", getpid(), getenv("TOTO"));
+  setenv("TOTO","42",1);
+  system("echo $$: $TOTO");
+  return 0;
+}
+
+===============
+
+
+Observations
+============
+./a.out
+3863: (null)
+3864: 42
+Un appel via system crée un processus
+
+
+Question 2
+----------
+source de votre programme
+=========================
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+//un appel avec system cree un processus                                       
+//les processus crees héritent de l'environnement qu'on a modifié              
+int main()
+{
+  printf("%d: %s\n", getpid(), getenv("TOTO"));
+  setenv("TOTO","42",1);
+  /* printf("%d: %s\n", getpid(), getenv("TOTO")); */
+  system("echo $$: $TOTO");
+  system("xterm &");
+  return 0;
+}
+
+
+Observations
+============
+On constate que TOTO est défini.
+Normal car c'est un processus fils donc il a une copie des variables d'environnement du père, y compris celles qu'on a ajouté.
+
+
+* Exercice 3 *
+Question 1
+----------
+source de votre programme
+=========================
+include <stdio.h>
+
+int main(int ac, char **av)
+{
+  int i;
+
+  if (ac != 3)
+    {
+      printf("Usage : %s param1 param2\n", av[0]);
+      return 1;
+    }
+  for (i=1; i<ac ; i++)
+    printf("%s\n", av[i]);
+  return 0;
+}
+
+
+
+source de votre script shell
+============================
+#! /bin/bash                                                                   
+
+gcc -o retourne_code_erreur retourne_code_erreur.c
+./retourne_code_erreur "param1" "param2"
+echo "Valeur de retour : $?"
+./retourne_code_erreur
+echo "Valeur de retour : $?"
+
+
+Observations
+============
+Execution:
+./retourne_code_erreur.sh 
+param1
+param2
+Valeur de retour : 0
+Usage : ./retourne_code_erreur param1 param2
+Valeur de retour : 1
+
+Observations: c'est ce qu'on voulait
+
+Question 2
+----------
+source de votre programme
+=========================
+Meme programme que précedemment
+
+source de votre script shell
+============================
+#! /bin/bash                                                                   
+
+if [ $# -ne 1 ] ; then
+    echo "Usage : $0 int"
+    exit 1
+fi
+
+gcc -o add add.c
+i=0
+while [ "$i" -ne "$1" ] ; do
+    echo $i
+    i=$(./add $i 1)
+done
+
+echo $i
+
+
+* Exercice 4 *
+Question 1
+----------
+source de votre programme
+=========================
+#include <stdio.h>
+#include <unistd.h>
+
+int main()
+{
+  int pid;
+
+  pid = fork();
+  if (pid == 0)
+    {
+      printf("Je suis le fils\n");
+      sleep(6);
+    }
+  else
+    {
+      printf("Je suis le pere, mon fils a l'identifiant %d\n", pid);
+      sleep(4);
+    }
+  return 0;
+}
+
+
+
+Sortie de votre programme
+=========================
+./a.out &
+Je suis le pere, mon fils a l'identifiant 4163
+Je suis le fils
+ps
+  PID TTY          TIME CMD
+ 3477 pts/0    00:00:00 bash
+ 4162 pts/0    00:00:00 a.out
+ 4163 pts/0    00:00:00 a.out
+ 4164 pts/0    00:00:00 ps
+
+
+Observations
+============
+Les PID se suivent.
+On a bien l'output qu'on veut
