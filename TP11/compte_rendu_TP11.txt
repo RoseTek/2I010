@@ -1,0 +1,29 @@
+Compte-rendu TP11
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+
+NOM :
+Prenom :
+Numero carte d'etudiant :
+------------------------------------------------------------------
+
+* Exercice 1 *
+Question 1
+----------
+Votre code source
+=================
+
+
+* Exercice 2 *
+Question 1
+----------
+Les codes source
+================
+
+
+
+Affichage produit
+=================
