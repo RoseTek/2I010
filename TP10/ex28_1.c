@@ -4,36 +4,35 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int fils(int count)
-{
-  int pid;
-  int tmp;
-  int cpt = 0;
-  int i;
-
-  pid = fork();
-
-  if (pid == 0)
-    {
-      sleep(4);
-      exit(0);
-    }
-  else
-    {
-      printf("FILS %d cree\n", pid);
-      wait();
-      printf("fils %d mort\n", pid);
-    }
-  return count+1;
-}
-
+/* trop rapide lors de la creation des processus fils :
+*** le rand() donne toujours la même valeur
+*** corrigé si on ajoute un sleep au pere entre chaque creation de fils
+*** mais ce n'est pas ce qu on veut
+*** durees differentes definies
+ */
 int main()
 {
-  int count = 0;
   int i;
+  int ret;
+  int pid;
+  int duree[3] = {3, 5, 2};
 
   printf("PERE : %d\n", getpid());
   for (i=0 ; i<3 ; i++)
-    count = fils(count);
-  return 0;
+    {
+      pid = fork();
+      if (!pid) //fils
+	{
+	  sleep(duree[i]);
+	  return 0;
+	}
+      else
+	printf("Processus créé %d\n", pid);
+    }
+  for (i=0 ; i<3 ; i++)
+    {
+      ret = wait();
+      printf("Mort du processus fils %d\n", ret);
+    }
+  printf("Tous les fils sont morts\n");
 }

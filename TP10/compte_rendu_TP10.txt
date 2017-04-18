@@ -1,0 +1,389 @@
+Compte-rendu TP10
+
+------------------------------------------------------------------
+NOM  : BRUNO
+Prenom : Lauranne
+Numero carte d'etudiant : 3602844
+
+NOM :
+Prenom :
+Numero carte d'etudiant :
+------------------------------------------------------------------
+
+* Exercice 27 *
+Question 1
+----------
+Votre code source
+=================
+
+#include <stdio.h>
+#include <unistd.h>
+
+int main()
+{
+  int pid;
+
+  pid = fork();
+  if (pid != 0)
+    {
+      printf("Je suis le pere\n");
+      sleep(10);
+    }
+  else
+    {
+      pid = fork();
+      if (pid != 0)
+	{
+	  printf("Je suis le fils\n");
+	  sleep(10);
+	}
+      else
+	{
+	  pid = fork();
+	  if (pid != 0)
+	    {
+	      printf("Je suis le petit fils\n");
+	      sleep(10);
+	    }
+	  else
+	    {
+	      printf("Je suis l'arriere petit fils\n");
+	      sleep(10);
+	    }
+	}
+    }
+  return 0;
+}
+
+copier / coller de la sortie de ps -l montrant les processus
+============================================================
+F S   UID   PID  PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+0 S 3602844 3375 3312  0  80   0 -  3541 -      pts/0    00:00:00 bash
+0 S 3602844 4330 3375  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4331 4330  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4332 4331  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4333 4332  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+0 R 3602844 4335 3375  0  80   0 -  2670 -      pts/0    00:00:00 ps
+
+
+Question 2
+----------
+Votre code source
+=================
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+/* programme séparé en sous fonctions pour plus de clarté */
+
+void petitfils(int id, int pere)
+{
+  int pid;
+  
+  pid = fork();
+  if (pid == 0)
+    {
+      printf("PETIT FILS %d_%d\t%d\n", pere, id, getpid());
+      sleep(10);
+      exit(0);
+    }
+}
+
+void fils(int id)
+{
+  int pid;
+  int cpt = 0;
+  int i;
+  
+  pid = fork();
+  if (pid == 0)
+    {
+      printf("FILS %d\t\t%d\n", id, getpid());
+      for (i=0 ; i<3 ; i++)
+	petitfils(i, id);
+      sleep(10);
+      exit(0);
+    }
+}
+
+int main()
+{
+  int i;
+
+  printf("PERE\t\t%d\n", getpid());
+  for (i=0 ; i<3 ; i++)
+    fils(i);
+  sleep(10);
+}
+
+
+
+copier / coller de la sortie de ps -l montrant les processus
+============================================================
+F S   UID   PID  PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+0 S 3602844 3375 3312  0  80   0 -  3572 -      pts/0    00:00:00 bash
+0 S 3602844 4354 3375  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4355 4354  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4356 4354  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4357 4354  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4358 4355  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4359 4356  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4360 4355  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4361 4357  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4362 4356  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4363 4355  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4364 4357  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4365 4356  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+1 S 3602844 4366 4357  0  80   0 -  1018 -      pts/0    00:00:00 a.out
+0 R 3602844 4367 3375  0  80   0 -  2670 -      pts/0    00:00:00 ps
+
+output de l'executable :
+PERE		4354
+FILS 0		4355
+FILS 1		4356
+FILS 2		4357
+PETIT FILS 0_0	4358
+PETIT FILS 0_1	4360
+PETIT FILS 2_0	4361
+PETIT FILS 1_1	4362
+PETIT FILS 0_2	4363
+PETIT FILS 2_1	4364
+PETIT FILS 1_0	4359
+PETIT FILS 2_2	4366
+PETIT FILS 1_2	4365
+
+
+* Exercice 28 *
+Question 1
+----------
+Votre code source
+=================
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+/* trop rapide lors de la creation des processus fils :
+*** le rand() donne toujours la même valeur
+*** corrigé si on ajoute un sleep au pere entre chaque creation de fils
+*** mais ce n'est pas ce qu on veut
+*** durees differentes definies
+ */
+int main()
+{
+  int i;
+  int ret;
+  int pid;
+  int duree[3] = {3, 5, 2};
+
+  printf("PERE : %d\n", getpid());
+  for (i=0 ; i<3 ; i++)
+    {
+      pid = fork();
+      if (!pid) //fils
+	{
+	  sleep(duree[i]);
+	  return 0;
+	}
+      else
+	printf("Processus créé %d\n", pid);
+    }
+  for (i=0 ; i<3 ; i++)
+    {
+      ret = wait();
+      printf("Mort du processus fils %d\n", ret);
+    }
+  printf("Tous les fils sont morts\n");
+}
+
+
+Affichage produit
+=====================
+PERE : 4395
+Processus créé 4396
+Processus créé 4397
+Processus créé 4398
+Mort du processus fils 4398
+Mort du processus fils 4396
+Mort du processus fils 4397
+Tous les fils sont morts
+
+
+Question 2
+----------
+Votre code source
+=================
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+/* programme séparé en sous fonctions pour plus de clarté */
+
+void petitfils(int id, int pere)
+{
+  int pid;
+  
+  pid = fork();
+  if (pid == 0)
+    {
+      printf("PETIT FILS %d_%d\t%d\n", pere, id, getpid());
+      sleep(10);
+      exit(0);
+    }
+}
+
+void fils(int id)
+{
+  int pid;
+  int cpt = 0;
+  int i;
+  
+  pid = fork();
+  if (pid == 0)
+    {
+      printf("FILS %d\t\t%d\n", id, getpid());
+      for (i=0 ; i<3 ; i++)
+	petitfils(i, id);
+      sleep(10);
+      for (i=0 ; i<3 ; i++)
+	wait(); // attente des petits fils
+      exit(0);
+    }
+}
+
+int main()
+{
+  int i;
+
+  printf("PERE\t\t%d\n", getpid());
+  for (i=0 ; i<3 ; i++)
+    fils(i);
+  for (i=0 ; i<3 ; i++) // attente des fils
+    wait();
+}
+
+
+Affichage produit
+=================
+PERE		4519
+FILS 0		4520
+FILS 1		4521
+FILS 2		4522
+PETIT FILS 0_0	4523
+PETIT FILS 0_1	4524
+PETIT FILS 2_0	4526
+PETIT FILS 0_2	4527
+PETIT FILS 1_1	4528
+PETIT FILS 2_1	4529
+PETIT FILS 1_2	4530
+PETIT FILS 2_2	4531
+PETIT FILS 1_0	4525
+
+* Exercice 29 *
+Question 1
+----------
+Votre code source des 2 programmes
+==================================
+	/* ecrit */
+#include <stdlib.h>
+#include <stdio.h>
+
+int main()
+{
+  fprintf(stdout, "Yolo\n");
+  return 0;
+}
+
+	/* lit */
+#include <stdlib.h>
+#include <stdio.h>
+
+int main()
+{
+  char buff[250];
+
+  fscanf(stdin, "%s", buff);
+  printf("Chaine lue : %s\n", buff);
+  return 0;
+}
+
+
+
+Exécution
+=========
+gcc -o ecrit ex29_1_ecrit.c
+gcc -o lit ex29_1_lit.c
+./ecrit > file
+./lit < file
+Chaine lue : Yolo
+
+
+Question 2
+----------
+
+Exécution
+=========
+./ecrit | ./lit
+
+
+* Exercice 30 *
+Question 1
+----------
+Votre code source
+=================
+#include <stdio.h>
+
+int my_err(char *msg, int ret)
+{
+  fprintf(stderr, "%s\n", msg);
+  return ret;
+}
+
+int main(int ac, char **av)
+{
+  FILE *f;
+
+  if (ac != 3)
+    return my_err("Usage : ./a.out file value", 1);
+  if (!(f = fopen(av[1], "w")))
+    return my_err("Error : fopen failed", 2);
+  fprintf(f, "%s\n", av[2]);
+  fclose(f);
+  return 0;
+}
+
+
+Question 2
+----------
+Votre code source
+=================
+#include <stdio.h>
+
+int my_err(char *msg, int ret)
+{
+  fprintf(stderr, "%s\n", msg);
+  return ret;
+}
+
+int main(int ac, char **av)
+{
+  FILE *f;
+  int val;
+
+  if (ac != 2)
+    return my_err("Usage : ./a.out file", 1);
+  if (!(f = fopen(av[1], "r+")))
+    return my_err("Error : fopen failed", 2);
+
+  fscanf(f, "%d", &val);
+  fseek(f, 0, 0);
+  fprintf(f, "%d\n", val + 1);
+
+  fclose(f);
+  return 0;
+}

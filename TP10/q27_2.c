@@ -4,51 +4,44 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int petitfils(int count, int pere)
+/* programme séparé en sous fonctions pour plus de clarté */
+
+void petitfils(int id, int pere)
 {
   int pid;
   
   pid = fork();
   if (pid == 0)
     {
-      printf("PETIT FILS %d_%d\t%d\n", pere, count, getpid());
+      printf("PETIT FILS %d_%d\t%d\n", pere, id, getpid());
       sleep(10);
       exit(0);
     }
-  return count+1;
 }
 
-int fils(int count)
+void fils(int id)
 {
   int pid;
-  int tmp;
   int cpt = 0;
   int i;
   
   pid = fork();
   if (pid == 0)
     {
-      printf("FILS %d\t\t%d\n", count, getpid());
+      printf("FILS %d\t\t%d\n", id, getpid());
       for (i=0 ; i<3 ; i++)
-	{
-	  tmp = petitfils(cpt, count);
-	  if (tmp == -1)
-	    return 0;
-	  cpt = tmp;
-	}
+	petitfils(i, id);
       sleep(10);
       exit(0);
     }
-  return count+1;
 }
 
 int main()
 {
-  int count = 0;
   int i;
 
   printf("PERE\t\t%d\n", getpid());
   for (i=0 ; i<3 ; i++)
-    count = fils(count);
+    fils(i);
   sleep(10);
 }

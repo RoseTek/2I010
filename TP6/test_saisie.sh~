@@ -1,5 +1,0 @@
-#! /bin/bash
-# test_saisie.sh
-
-# val1=$(./saisie_val.sh)
-echo $val1
